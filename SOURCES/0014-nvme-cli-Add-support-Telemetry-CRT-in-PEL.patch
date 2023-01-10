@@ -1,0 +1,29 @@
+From 44b23d2daf246db0ac09a4a79a9a5161843a4936 Mon Sep 17 00:00:00 2001
+From: Maurizio Lombardi <mlombard@redhat.com>
+Date: Thu, 30 Jun 2022 16:44:07 +0200
+Subject: [PATCH 7/7] nvme-cli: Add support Telemetry CRT in PEL
+
+Add "Telemetry CRT" event in PEL.
+
+Signed-off-by: Maurizio Lombardi <mlombard@redhat.com>
+---
+ nvme-print.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/nvme-print.c b/nvme-print.c
+index 37011dbe..992b9b83 100755
+--- a/nvme-print.c
++++ b/nvme-print.c
+@@ -1674,6 +1674,9 @@ void nvme_show_persistent_event_log(void *pevent_log_info,
+ 					nvme_feature_to_string(fid), cdw11);
+ 			nvme_feature_show_fields(fid, cdw11, mem_buf);
+ 			break;
++		case NVME_TELEMETRY_CRT:
++			d(pevent_log_info + offset, 512, 16, 1);
++			break;
+ 		case NVME_THERMAL_EXCURSION_EVENT:
+ 			thermal_exc_event = pevent_log_info + offset;
+ 			printf("Thermal Excursion Event Entry: \n");
+-- 
+2.31.1
+

@@ -1,0 +1,59 @@
+From db50dbf5692325cfef8fb77e56e1e44af83a022e Mon Sep 17 00:00:00 2001
+From: Maurizio Lombardi <mlombard@redhat.com>
+Date: Wed, 29 Jun 2022 16:47:30 +0200
+Subject: [PATCH 1/7] nvme-cli: nvme gen-hostnqn use partition UUID on IBM
+ POWER
+
+Signed-off-by: Maurizio Lombardi <mlombard@redhat.com>
+---
+ nvme.c | 27 +++++++++++++++++++++++++--
+ 1 file changed, 25 insertions(+), 2 deletions(-)
+
+diff --git a/nvme.c b/nvme.c
+index 5beeac78..0535ed2b 100644
+--- a/nvme.c
++++ b/nvme.c
+@@ -6516,6 +6516,26 @@ static int admin_passthru(int argc, char **argv, struct command *cmd, struct plu
+ 	return passthru(argc, argv, NVME_IOCTL_ADMIN_CMD, 1, desc, cmd);
+ }
+ 
++#define PATH_UUID_IBM	"/proc/device-tree/ibm,partition-uuid"
++
++static int uuid_from_device_tree(char *system_uuid)
++{
++	ssize_t len;
++	int f;
++
++	f = open(PATH_UUID_IBM, O_RDONLY);
++	if (f < 0)
++		return -ENXIO;
++
++	memset(system_uuid, 0, 37);
++	len = read(f, system_uuid, 37 - 1);
++	close(f);
++	if (len < 0)
++		return -ENXIO;
++
++	return strlen(system_uuid) ? 0 : -ENXIO;
++}
++
+ static int gen_hostnqn_cmd(int argc, char **argv, struct command *command, struct plugin *plugin)
+ {
+ 	int ret;
+@@ -6525,8 +6545,11 @@ static int gen_hostnqn_cmd(int argc, char **argv, struct command *command, struc
+ #endif
+ 
+ 	ret = uuid_from_dmi(uuid_str);
+-	if (ret < 0)
+-		ret = uuid_from_systemd(uuid_str);
++	if (ret < 0) {
++		ret = uuid_from_device_tree(uuid_str);
++		if (ret < 0)
++			ret = uuid_from_systemd(uuid_str);
++	}
+ #ifdef LIBUUID
+ 	if (ret < 0) {
+ 		uuid_generate_random(uuid);
+-- 
+2.31.1
+

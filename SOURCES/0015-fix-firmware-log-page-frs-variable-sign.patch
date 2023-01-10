@@ -1,0 +1,26 @@
+From b3db6509e1f70bdde9205ab97bd87fbb94a49f0a Mon Sep 17 00:00:00 2001
+From: Maurizio Lombardi <mlombard@redhat.com>
+Date: Fri, 15 Jul 2022 11:10:59 +0200
+Subject: [PATCH] fix firmware log page frs variable sign
+
+Signed-off-by: Maurizio Lombardi <mlombard@redhat.com>
+---
+ linux/nvme.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/linux/nvme.h b/linux/nvme.h
+index 8b4c6833..2c402688 100644
+--- a/linux/nvme.h
++++ b/linux/nvme.h
+@@ -1539,7 +1539,7 @@ struct nvme_error_log_page {
+ struct nvme_firmware_log_page {
+ 	__u8	afi;
+ 	__u8	resv[7];
+-	__u8    frs[7][8];
++	char    frs[7][8];
+ 	__u8	resv2[448];
+ };
+ 
+-- 
+2.31.1
+

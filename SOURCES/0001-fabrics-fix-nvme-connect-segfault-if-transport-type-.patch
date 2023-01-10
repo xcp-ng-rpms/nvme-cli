@@ -1,0 +1,32 @@
+From f74ac1b841b0aae73969debaed0444f0ecb03dba Mon Sep 17 00:00:00 2001
+From: Martin George <marting@netapp.com>
+Date: Mon, 15 Nov 2021 16:00:47 +0530
+Subject: [PATCH] fabrics: fix 'nvme connect' segfault if transport type is
+ omitted
+
+Check if the transport type is available before dereferencing
+it in discovery_trsvcid().
+
+Fixes: 362c90f ("fabrics: add default port number for NVMe/TCP I/O
+controllers")
+Signed-off-by: Martin George <marting@netapp.com>
+---
+ fabrics.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/fabrics.c b/fabrics.c
+index d691191..adca89b 100644
+--- a/fabrics.c
++++ b/fabrics.c
+@@ -1070,6 +1070,8 @@ static void set_discovery_kato(struct fabrics_config *cfg)
+ 
+ static void discovery_trsvcid(struct fabrics_config *fabrics_cfg, bool discover)
+ {
++	if (!fabrics_cfg->transport)
++		return;
+ 	if (!strcmp(fabrics_cfg->transport, "tcp")) {
+ 		if (discover) {
+ 			/* Default port for NVMe/TCP discovery controllers */
+-- 
+2.27.0
+

@@ -1,0 +1,36 @@
+From 821935cccfcad6b18da78d42f9ddf49f4cbe0b8e Mon Sep 17 00:00:00 2001
+From: Daniel Wagner <dwagner@suse.de>
+Date: Thu, 9 Dec 2021 15:40:26 +0100
+Subject: [PATCH 2/6] bash: Fix nvme completion
+
+Signed-off-by: Daniel Wagner <dwagner@suse.de>
+---
+ completions/bash-nvme-completion.sh | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
+
+diff --git a/completions/bash-nvme-completion.sh b/completions/bash-nvme-completion.sh
+index 41938d7..902da01 100644
+--- a/completions/bash-nvme-completion.sh
++++ b/completions/bash-nvme-completion.sh
+@@ -101,8 +101,7 @@ _cmds="list list-subsys id-ctrl id-ns \
+ 	connect disconnect disconnect-all gen-hostnqn \
+ 	show-hostnqn dir-receive dir-send virt-mgmt \
+ 	rpmb boot-part-log fid-support-effects-log \
+-	supported-log-pages lockdown"
+-	supported-log-pages list-endgrp"
++	supported-log-pages lockdown list-endgrp"
+ 
+ # Add plugins:
+ for plugin in "${!_plugin_subcmds[@]}"; do
+@@ -1368,7 +1367,7 @@ plugin_ymtc_opts () {
+ 		opts+=" --namespace-id= -n --raw-binary -b"
+ 			;;
+ 		"help")
+-		opts+=NO_OPTS
++		opts+=$NO_OPTS
+ 			;;
+ 	esac
+ 
+-- 
+2.27.0
+

@@ -1,0 +1,29 @@
+From ff8f9b6f59b574fda24a071fb0af4381c0cc6d9f Mon Sep 17 00:00:00 2001
+From: Maurizio Lombardi <mlombard@redhat.com>
+Date: Thu, 9 Dec 2021 12:21:51 +0100
+Subject: [PATCH 1/6] fabrics: fix a buffer overrun
+
+the uuid buffer size must be at least 37 bytes to avoid
+corrupting the memory
+
+Signed-off-by: Maurizio Lombardi <mlombard@redhat.com>
+---
+ fabrics.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/fabrics.c b/fabrics.c
+index adca89b..0766729 100644
+--- a/fabrics.c
++++ b/fabrics.c
+@@ -883,7 +883,7 @@ static char *hostnqn_generate_systemd(void)
+ 
+ static char *hostnqn_read_dmi(void)
+ {
+-	char uuid[16];
++	char uuid[37];
+ 	char *ret = NULL;
+ 
+ 	if (uuid_from_dmi(uuid) < 0)
+-- 
+2.27.0
+

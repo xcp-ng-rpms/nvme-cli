@@ -1,0 +1,13 @@
+--- nvme-cli-1.9/Makefile.orig	2020-05-27 14:04:56.259961135 -0400
++++ nvme-cli-1.9/Makefile	2020-05-27 14:05:22.796185371 -0400
+@@ -125,8 +125,8 @@
+ 		$(INSTALL) -m 644 -T ./etc/discovery.conf.in $(DESTDIR)$(SYSCONFDIR)/nvme/discovery.conf; \
+ 	fi
+ 
+-install-spec: install-bin install-man install-bash-completion install-zsh-completion install-etc install-systemd install-udev install-dracut
+-install: install-spec install-hostparams
++install-spec: install-bin install-man install-bash-completion install-zsh-completion install-systemd install-udev install-dracut
++install: install-spec
+ 
+ nvme.spec: nvme.spec.in NVME-VERSION-FILE
+ 	sed -e 's/@@VERSION@@/$(NVME_VERSION)/g' < $< > $@+

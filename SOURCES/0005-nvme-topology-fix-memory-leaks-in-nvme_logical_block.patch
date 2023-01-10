@@ -1,0 +1,35 @@
+From b580886dbc322b2a71d6c0c1b71f9fca7b750b02 Mon Sep 17 00:00:00 2001
+From: Maurizio Lombardi <mlombard@redhat.com>
+Date: Tue, 14 Dec 2021 09:58:09 +0100
+Subject: [PATCH 4/6] nvme-topology: fix memory leaks in
+ nvme_logical_block_size_from_ns_char()
+
+Free the allocated strings before returning from the function
+
+Signed-off-by: Maurizio Lombardi <mlombard@redhat.com>
+---
+ nvme-topology.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/nvme-topology.c b/nvme-topology.c
+index 0a22f6b..6be2b09 100644
+--- a/nvme-topology.c
++++ b/nvme-topology.c
+@@ -686,10 +686,13 @@ int nvme_logical_block_size_from_ns_char(const char *dev)
+ 		return -EINVAL;
+ 
+ 	s = nvme_get_ctrl_attr(path, "logical_block_size");
++	free(path);
+ 	if (!s)
+ 		return -EINVAL;
+ 
+-	return atoi(s);
++	ret = atoi(s);
++	free(s);
++	return ret;
+ }
+ 
+ void *mmap_registers(const char *dev)
+-- 
+2.27.0
+

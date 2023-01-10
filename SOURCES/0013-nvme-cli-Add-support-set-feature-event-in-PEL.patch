@@ -1,0 +1,69 @@
+From 859b8ee99a725bdcfbb7c8352c50449d126cffc4 Mon Sep 17 00:00:00 2001
+From: Maurizio Lombardi <mlombard@redhat.com>
+Date: Thu, 30 Jun 2022 16:41:59 +0200
+Subject: [PATCH 6/7] nvme-cli: Add support set feature event in PEL
+
+Add "Set Feature" event in PEL.
+
+Persistent Event Entries:
+Event Number: 0
+Event Type: Set Feature Event(0xb)
+Event Type Revision: 1
+Event Header Length: 21
+Controller Identifier: 65
+Event Timestamp: 564587204146155
+Vendor Specific Information Length: 0
+Event Length: 16
+Set Feature Event Entry:
+Set Feature ID  :0x7 (Number of Queues),  value:0x270027
+        Number of IO Completion Queues Allocated (NCQA): 40
+        Number of IO Submission Queues Allocated (NSQA): 40
+
+Signed-off-by: Maurizio Lombardi <mlombard@redhat.com>
+---
+ nvme-print.c | 15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
+
+diff --git a/nvme-print.c b/nvme-print.c
+index 74ecd95a..37011dbe 100755
+--- a/nvme-print.c
++++ b/nvme-print.c
+@@ -1436,6 +1436,8 @@ void nvme_show_persistent_event_log(void *pevent_log_info,
+ {
+ 	__u32 offset, por_info_len, por_info_list;
+ 	__u64 *fw_rev;
++	int fid, cdw11, dword_cnt;
++	unsigned char *mem_buf = NULL;
+ 	struct nvme_smart_log *smart_event;
+ 	struct nvme_fw_commit_event *fw_commit_event;
+ 	struct nvme_time_stamp_change_event *ts_change_event;
+@@ -1446,6 +1448,7 @@ void nvme_show_persistent_event_log(void *pevent_log_info,
+ 	struct nvme_format_nvm_compln_event *format_cmpln_event;
+ 	struct nvme_sanitize_start_event *sanitize_start_event;
+ 	struct nvme_sanitize_compln_event *sanitize_cmpln_event;
++	struct nvme_set_feature_event *set_feat_event;
+ 	struct nvme_thermal_exc_event *thermal_exc_event;
+ 	struct nvme_persistent_event_log_head *pevent_log_head;
+ 	struct nvme_persistent_event_entry_head *pevent_entry_head;
+@@ -1659,6 +1662,18 @@ void nvme_show_persistent_event_log(void *pevent_log_info,
+ 			printf("Completion Information: %u\n",
+ 				le16_to_cpu(sanitize_cmpln_event->cmpln_info));
+ 			break;
++		case NVME_SET_FEATURE_EVENT:
++			set_feat_event = pevent_log_info + offset;
++			printf("Set Feature Event Entry: \n");
++			dword_cnt =  set_feat_event->layout & 0x03;
++			fid = le32_to_cpu(set_feat_event->cdw_mem[0]) & 0x000f;
++			cdw11 = le32_to_cpu(set_feat_event->cdw_mem[1]);
++			if (((set_feat_event->layout & 0xff) >> 2) != 0)
++				mem_buf = (unsigned char *)(set_feat_event + 4 + dword_cnt * 4);
++			printf("Set Feature ID  :%#02x (%s),  value:%#08x\n", fid,
++					nvme_feature_to_string(fid), cdw11);
++			nvme_feature_show_fields(fid, cdw11, mem_buf);
++			break;
+ 		case NVME_THERMAL_EXCURSION_EVENT:
+ 			thermal_exc_event = pevent_log_info + offset;
+ 			printf("Thermal Excursion Event Entry: \n");
+-- 
+2.31.1
+

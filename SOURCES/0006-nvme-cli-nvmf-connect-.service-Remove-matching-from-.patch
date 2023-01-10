@@ -1,0 +1,37 @@
+From 58c23ceb12d16756b2222a55d1d9dc5f34bb4fa4 Mon Sep 17 00:00:00 2001
+From: James Smart <jsmart2021@gmail.com>
+Date: Fri, 17 Dec 2021 11:32:32 -0800
+Subject: [PATCH 5/6] nvme-cli: nvmf-connect@.service: Remove matching from
+ default syntax
+
+commit 53aab69a0add added the "--matching" argument to the systemd
+connect script that issues connect-all to a discovery controller. When
+this argument is used, only discovery log entries whose target port
+traddr's match the traddr of the discovery controller will be connected
+to.  This eliminates the ability to do referrals by the discovery
+controller.
+
+Revert the commit so that the "--matching" argument is not default
+behavior.
+
+Signed-off-by: James Smart <jsmart2021@gmail.com>
+CC: Martin Wilck <mwilck@suse.com>
+Signed-off-by: Daniel Wagner <dwagner@suse.de>
+Link: https://lore.kernel.org/r/20211217193232.29034-1-jsmart2021@gmail.com
+---
+ nvmf-autoconnect/systemd/nvmf-connect@.service | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/nvmf-autoconnect/systemd/nvmf-connect@.service b/nvmf-autoconnect/systemd/nvmf-connect@.service
+index 5fbf081..c60f146 100644
+--- a/nvmf-autoconnect/systemd/nvmf-connect@.service
++++ b/nvmf-autoconnect/systemd/nvmf-connect@.service
+@@ -11,4 +11,4 @@ Requires=nvmf-connect.target
+ [Service]
+ Type=simple
+ Environment="CONNECT_ARGS=%i"
+-ExecStart=/bin/sh -c "nvme connect-all --matching --quiet `/bin/echo -e '${CONNECT_ARGS}'`"
++ExecStart=/bin/sh -c "nvme connect-all --quiet `/bin/echo -e '${CONNECT_ARGS}'`"
+-- 
+2.27.0
+

@@ -1,0 +1,86 @@
+From 1264c6323937c4a0342174fdd9be5a66ab1eaf24 Mon Sep 17 00:00:00 2001
+From: James Smart <jsmart2021@gmail.com>
+Date: Fri, 17 Dec 2021 14:20:22 -0800
+Subject: [PATCH 6/6] nvme-cli: Make connect-all matching be case insensitive
+
+The comparison routine that checks discovery controller traddr with a
+discovery log traddr uses a simple strncmp.  For FC, which kicks off
+connect-all requests vay systemd, the nvme-fc transport will build
+traddr strings with lower case hexadecimal.  Some FC discovery
+controllers return traddr strings with upper case hexadecimal. There
+was is no rqmt in the NVME-FC spec that it be upper or lower case.
+Given the case difference, the connect-all fails the match logic and
+doesn't connect to storage.
+
+Revise the traddr comparison routine to duplicate the strings and
+convert them to lower case for comparison.
+
+Signed-off-by: James Smart <jsmart2021@gmail.com>
+Signed-off-by: Daniel Wagner <dwagner@suse.de>
+Link: https://lore.kernel.org/r/20211217222022.30516-1-jsmart2021@gmail.com
+---
+ fabrics.c | 26 +++++++++++++++++++++++++-
+ 1 file changed, 25 insertions(+), 1 deletion(-)
+
+diff --git a/fabrics.c b/fabrics.c
+index 0766729..a1e2593 100644
+--- a/fabrics.c
++++ b/fabrics.c
+@@ -34,6 +34,7 @@
+ #include <stddef.h>
+ #include <syslog.h>
+ #include <time.h>
++#include <ctype.h>
+ 
+ #include <sys/types.h>
+ #include <arpa/inet.h>
+@@ -681,6 +682,12 @@ static int space_strip_len(int max, const char *str)
+ 	return i + 1;
+ }
+ 
++static void strtolower(char *str)
++{
++	for ( ; *str; str++)
++		*str = tolower(*str);
++}
++
+ static void print_discovery_log(struct nvmf_disc_rsp_page_hdr *log, int numrec,
+ 				int instance)
+ {
+@@ -1385,7 +1392,9 @@ static bool cargs_match_found(struct nvmf_disc_rsp_page_entry *entry)
+ 
+ static bool should_connect(struct nvmf_disc_rsp_page_entry *entry)
+ {
++	char *dctrl_traddr, *log_traddr;
+ 	int len;
++	bool connect = true;
+ 
+ 	if (cargs_match_found(entry))
+ 		return false;
+@@ -1398,7 +1407,22 @@ static bool should_connect(struct nvmf_disc_rsp_page_entry *entry)
+ 		return true;
+ 
+ 	len = space_strip_len(NVMF_TRADDR_SIZE, entry->traddr);
+-	return !strncmp(fabrics_cfg.traddr, entry->traddr, len);
++
++	dctrl_traddr = strdup(fabrics_cfg.traddr);
++	log_traddr = strndup(entry->traddr, len);
++	if (!dctrl_traddr || !log_traddr)
++		goto free_exit;
++
++	strtolower(dctrl_traddr);
++	strtolower(log_traddr);
++
++	connect = (strlen(dctrl_traddr) == len) &&
++		  !strcmp(dctrl_traddr, log_traddr);
++
++free_exit:
++	free(log_traddr);
++	free(dctrl_traddr);
++	return connect;
+ }
+ 
+ static int connect_ctrls(struct nvmf_disc_rsp_page_hdr *log, int numrec)
+-- 
+2.27.0
+
